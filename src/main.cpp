@@ -92,6 +92,9 @@ int main() {
           double psi = j[1]["psi"];
           double v = j[1]["speed"];
 
+          double delta= j[1]["steering_angle"];
+          double a = j[1]["throttle"];
+
           /*
           * TODO: Calculate steering angle and throttle using MPC.
           *
@@ -101,6 +104,62 @@ int main() {
           double steer_value;
           double throttle_value;
 
+          //transfor waypoints to car's coordinate
+          size_t car_pts_size = ptsx.size();
+          auto car_ptsx = Eigen::VectorXd(car_pts_size);
+          auto car_ptsy = Eigen::VectorXd(car_pts_size);
+
+          for (int i = 0; i < car_pts_size; i++) {
+            double car_dx = ptsx[i] - px;
+            double car_dy = ptsy[i] - py;
+            car_ptsx(i) = car_dx * cos(-psi) - car_dy * sin(-psi);
+            car_ptsy(i) = car_dx * sin(-psi) + car_dy * cos(-psi);
+          }
+
+          //Fitting a polynomial to the waypoints, 3rd-order
+          auto coeffs = polyfit(car_ptsx, car_ptsy, 3);
+
+          double cte = polyeval(coeffs, 0);  // px = 0, py = 0
+          double epsi = -atan(coeffs[1]);  // p
+
+//          // Modle the delay of the control:
+//          // Actuator delay in milliseconds, given experience: 100 ms(0.1s).
+//          const double delay =  0.1;
+
+//          const double Lf = 2.67;
+
+//          // Initial state, given car's coordinate:
+//          const double x0 = 0;
+//          const double y0 = 0;
+//          const double psi0 = 0;
+//          const double cte0 = coeffs[0];
+//          const double epsi0 = -atan(coeffs[1]);
+
+//          // State after delay:
+//          double x_delay = x0 + ( v * cos(psi0) * delay );
+//          double y_delay = y0 + ( v * sin(psi0) * delay );
+//          double psi_delay = psi0 - ( v * delta * delay / Lf );
+//          double v_delay = v + a * delay;
+//          double cte_delay = cte0 + ( v * sin(epsi0) * delay );
+//          double epsi_delay = epsi0 - ( v * atan(coeffs[1]) * delay / Lf );
+
+          // Define the state vector.
+          Eigen::VectorXd state(6);
+          //state << x_delay, y_delay, psi_delay, v_delay, cte_delay, epsi_delay;
+          state << 0, 0, 0, v, cte, epsi;
+
+          //MPC solver:
+          auto vars = mpc.Solve(state, coeffs);
+
+          steer_value = vars[0]/deg2rad(25);
+          throttle_value = vars[1];
+
+//          //Calculating the cross track and orientation error
+//          double cte = polyeval(coeffs, 0);
+//          double epsi = -atan(coeffs[1]);
+
+
+          //TODO end-----------------------------------------------
           json msgJson;
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
           // Otherwise the values will be in between [-deg2rad(25), deg2rad(25] instead of [-1, 1].
@@ -113,7 +172,16 @@ int main() {
 
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Green line
+          //TODO---------------------------------------------------
+          for ( int i = 2; i < vars.size(); i++ ) {
+            if ( i % 2 == 0 ) {
+              mpc_x_vals.push_back( vars[i] );
+            } else {
+              mpc_y_vals.push_back( vars[i] );
+            }
+          }
 
+          //TODO end ----------------------------------------------
           msgJson["mpc_x"] = mpc_x_vals;
           msgJson["mpc_y"] = mpc_y_vals;
 
@@ -123,6 +191,13 @@ int main() {
 
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Yellow line
+          //TODO----------------------------------------------------
+          for (double i = 0; i < 100; i += 3){
+            next_x_vals.push_back(i);
+            next_y_vals.push_back(polyeval(coeffs, i));
+          }
+
+          //TODO end -----------------------------------------------
 
           msgJson["next_x"] = next_x_vals;
           msgJson["next_y"] = next_y_vals;

@@ -1,8 +1,37 @@
 # CarND-Controls-MPC
 Self-Driving Car Engineer Nanodegree Program
 
----
+## Implementation
+### 1. The Model
 
+There are six states contained in the model: State [x,y,ψ,v,cte,eψ]
+- x: vehicle's x position
+- y: vehicle's y position
+- ψ: vehicle's orientation angle
+- v: vehicle's velocity
+- cte: cross-track error
+- eψ: orientation angle error (epsi)
+
+There are two actuators used for the vehicle control:
+Actuator [δ, a]
+- δ: steering angle
+- a: throttle/acceleration
+
+
+The following update equation was used to model the vehicle dynamics:
+![model update equation](images/2018/09/model-update-equation.png)
+
+### 2. Timestep Length and Elapsed Duration (N & dt)
+Define N and dt:
+
+MPC attempts to approximate a continuous reference trajectory by means of discrete paths between actuations.
+- N: number of timesteps the model predicts / number of variables optimized by the MPC
+- dt: time period between each timestep. Larger values of dt result in less frequent actuations, which makes it harder to accurately approximate a continuous reference trajectory.
+
+N&dt tuning:
+
+
+---
 ## Dependencies
 
 * cmake >= 3.5
@@ -106,3 +135,23 @@ still be compilable with cmake and make./
 
 ## How to write a README
 A well written README file can enhance your project and portfolio.  Develop your abilities to create professional README files by completing [this free course](https://www.udacity.com/course/writing-readmes--ud777).
+
+---
+
+## Error
+When install ipopt on Mac:
+```
+make[2]: dynamiclib: No such file or directory
+make[2]: [libpord.dylib] Error 1 (ignored)
+echo libpord.dylib
+libpord.dylib
+if [ "./PORD/lib/" != "" ] ; then \
+	  cp ./PORD/lib//libpord.dylib lib/libpord.dylib; \
+	fi;
+cp: ./PORD/lib//libpord.dylib: No such file or directory
+make[1]: *** [lib/libpord.dylib] Error 1
+make: *** [c] Error 2
+```
+Solution:  
+
+https://github.com/udacity/CarND-MPC-Project/issues/22
