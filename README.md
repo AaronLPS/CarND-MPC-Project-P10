@@ -30,6 +30,46 @@ MPC attempts to approximate a continuous reference trajectory by means of discre
 
 N&dt tuning:
 
+Started with (N, dt) = (10, 0.1).
+The green path would often curve to the right or left near the end, so I tried increasing N so the model would try to fit more of the upcoming path and would be penalised more if it curved off erratically after 10 steps.
+Increasing N to 15 improved the fit and made the vehicle drive smoother. Would increasing N further improve performance?
+Increasing N to 20 (dt = 0.1) made the vehicle weave more (drive less steadily) especially after the first turn.
+The weaving was exacerbated with N = 50 - the vehicle couldn't even stay on the track for five seconds.
+Increasing dt to 0.2 (N = 10) made the vehicle too slow to respond to changes in lane curvature. E.g. when it reached the first turn, it only started steering left when it was nearly off the track. This delayed response is expected because it re-evaluates the model less frequently.
+Decreasing dt to 0.05 made the vehicle drive in a really jerky way.
+So I chose N = 15, dt = 0.1.
+
+### 3. Polynomial Fitting and MPC Preprocessing
+
+A polynomial is fitted to waypoints.
+
+If the student preprocesses waypoints, the vehicle state, and/or actuators prior to the MPC procedure it is described.
+
+
+
+### 4. Model Predictive Control with Latency
+
+The latency is the delay between the control and the real situation. The faster the vehicle is moving, the worse the influence from latency. Considering latency into the model can help minimise the influence. Given the provided experience the vehicle control latency is around 100ms. We use vehicle kinematic model to calculate/predict the state 100ms ahead, and then feed the predicted stats into MPC solver.
+
+The predicted stated is calculated as follows:
+```c++
+// Initial states.
+const double x0 = 0;
+const double y0 = 0;
+const double psi0 = 0;
+const double cte0 = coeffs[0];
+const double epsi0 = -atan(coeffs[1]);
+
+// Predicted states with Latency taken into account.
+double x_delay = x0 + ( v * cos(psi0) * delay );
+double y_delay = y0 + ( v * sin(psi0) * delay );
+double psi_delay = psi0 - ( v * delta * delay / mpc.Lf );
+double v_delay = v + a * delay;
+double cte_delay = cte0 + ( v * sin(epsi0) * delay );
+double epsi_delay = epsi0 - ( v * atan(coeffs[1]) * delay / mpc.Lf );
+
+```
+
 
 ---
 ## Dependencies

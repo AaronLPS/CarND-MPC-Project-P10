@@ -119,44 +119,40 @@ int main() {
           //Fitting a polynomial to the waypoints, 3rd-order
           auto coeffs = polyfit(car_ptsx, car_ptsy, 3);
 
-          double cte = polyeval(coeffs, 0);  // px = 0, py = 0
-          double epsi = -atan(coeffs[1]);  // p
+          //double cte = polyeval(coeffs, 0);  // px = 0, py = 0
+          //double epsi = -atan(coeffs[1]);  // p
 
-//          // Modle the delay of the control:
-//          // Actuator delay in milliseconds, given experience: 100 ms(0.1s).
-//          const double delay =  0.1;
+          // Modle the delay of the control:
+          // Actuator delay in milliseconds, given experience: 100 ms(0.1s).
+          const double delay =  0.1;
 
-//          const double Lf = 2.67;
+          const double Lf = 2.67;
 
-//          // Initial state, given car's coordinate:
-//          const double x0 = 0;
-//          const double y0 = 0;
-//          const double psi0 = 0;
-//          const double cte0 = coeffs[0];
-//          const double epsi0 = -atan(coeffs[1]);
+          // Initial state, given car's coordinate:
+          const double x0 = 0;
+          const double y0 = 0;
+          const double psi0 = 0;
+          const double cte0 = coeffs[0];
+          const double epsi0 = -atan(coeffs[1]);
 
-//          // State after delay:
-//          double x_delay = x0 + ( v * cos(psi0) * delay );
-//          double y_delay = y0 + ( v * sin(psi0) * delay );
-//          double psi_delay = psi0 - ( v * delta * delay / Lf );
-//          double v_delay = v + a * delay;
-//          double cte_delay = cte0 + ( v * sin(epsi0) * delay );
-//          double epsi_delay = epsi0 - ( v * atan(coeffs[1]) * delay / Lf );
+          // State after delay:
+          double x_delay = x0 + ( v * cos(psi0) * delay );
+          double y_delay = y0 + ( v * sin(psi0) * delay );
+          double psi_delay = psi0 - ( v * delta * delay / Lf );
+          double v_delay = v + a * delay;
+          double cte_delay = cte0 + ( v * sin(epsi0) * delay );
+          double epsi_delay = epsi0 - ( v * atan(coeffs[1]) * delay / Lf );
 
           // Define the state vector.
           Eigen::VectorXd state(6);
-          //state << x_delay, y_delay, psi_delay, v_delay, cte_delay, epsi_delay;
-          state << 0, 0, 0, v, cte, epsi;
+          state << x_delay, y_delay, psi_delay, v_delay, cte_delay, epsi_delay;
+          //state << 0, 0, 0, v, cte, epsi;
 
           //MPC solver:
           auto vars = mpc.Solve(state, coeffs);
 
           steer_value = vars[0]/deg2rad(25);
           throttle_value = vars[1];
-
-//          //Calculating the cross track and orientation error
-//          double cte = polyeval(coeffs, 0);
-//          double epsi = -atan(coeffs[1]);
 
 
           //TODO end-----------------------------------------------
