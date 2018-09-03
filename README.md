@@ -30,22 +30,23 @@ MPC attempts to approximate a continuous reference trajectory by means of discre
 
 N&dt tuning:
 
-Started with (N, dt) = (10, 0.1).
-The green path would often curve to the right or left near the end, so I tried increasing N so the model would try to fit more of the upcoming path and would be penalised more if it curved off erratically after 10 steps.
-Increasing N to 15 improved the fit and made the vehicle drive smoother. Would increasing N further improve performance?
-Increasing N to 20 (dt = 0.1) made the vehicle weave more (drive less steadily) especially after the first turn.
-The weaving was exacerbated with N = 50 - the vehicle couldn't even stay on the track for five seconds.
-Increasing dt to 0.2 (N = 10) made the vehicle too slow to respond to changes in lane curvature. E.g. when it reached the first turn, it only started steering left when it was nearly off the track. This delayed response is expected because it re-evaluates the model less frequently.
-Decreasing dt to 0.05 made the vehicle drive in a really jerky way.
-So I chose N = 15, dt = 0.1.
+Started with (N, dt) = (10, 0.5).
+The vehicle was too slow to react on turning. It leads the vehicle off the track.
+
+Decreasing dt to 0.2. Shorter time period leaded to quicker react. It became better on turning.
+
+Decreasing dt to 0.1. Much better on following the track.
+
+Noticed the end predicted path will reach the edge of road when the vehicle was on turning. Try to increase the number of timesteps to make a longer 3rd-order polynomial fitting. N = 15.
+Vehicle keeps moving closely along the centre of the lane. At last, I choose N=15, dt = 0.1.
+
+However, it was noticed that the turning speed on N=15 was slower then the one on N=10. So, there is no doubt that further improvements can be made with parameter tuning.
 
 ### 3. Polynomial Fitting and MPC Preprocessing
 
-A polynomial is fitted to waypoints.
+A 3rd order polynomial is fitted to waypoints. Before the polynomial fitting, in order to simplify the calculation, we made a coordinate transform to vehicle's coordinate.
 
-If the student preprocesses waypoints, the vehicle state, and/or actuators prior to the MPC procedure it is described.
-
-
+Then the calculated polynomial coeffs were used for calculating cte and epsi.
 
 ### 4. Model Predictive Control with Latency
 
